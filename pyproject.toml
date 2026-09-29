@@ -1,0 +1,51 @@
+[project]
+name = "strata-evaluation"
+version = "0.1.0"
+description = "How a prediction is scored against an answer: the counts, the matching, and the numbers read from them, as pure functions over strata-contracts values"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    # The values being scored. Nothing heavier: scoring needs no framework,
+    # no store and no model, so a package that only reads records can
+    # depend on this one without carrying any of them.
+    "strata-contracts>=0.1,<0.2",
+]
+
+# What developing this package alone needs beyond its extras. Inside the
+# strata workspace the root's group is used instead.
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "pyright>=1.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+# The same set as every strata package: pinned, widened once, on purpose.
+select = ["E", "F", "I", "B", "SIM", "DTZ", "UP", "C4", "RUF"]
+
+[tool.ruff.lint.isort]
+# The namespace is one project however many repositories hold it, so a
+# sibling package sorts with this one and not with the third parties.
+known-first-party = ["strata"]
+
+[tool.pyright]
+include = ["strata"]
+pythonVersion = "3.13"
+venvPath = "."
+venv = ".venv"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+# PEP 420 namespace: no strata/__init__.py in any package, or they stop merging
+packages = ["strata"]

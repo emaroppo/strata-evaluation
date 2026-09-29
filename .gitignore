@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+dist/
+# Sibling checkouts the CI step builds wheels from; see .github/sibling-wheels.sh
+.siblings/
+# The strata packages are not on an index, so a lock here would pin wheels
+# built beside the checkout; none is kept, and the strata workspace keeps one.
+uv.lock
