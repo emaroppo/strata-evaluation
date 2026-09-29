@@ -9,9 +9,12 @@ class assertion. See ``docs/adr/0035``.
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
+from pydantic import BaseModel
+
 from strata.contracts import Choices
 
 from ..counting import Tally
+from .base import Document, Scored, Task, TaskError
 
 NAME = "classify"
 #: The label type this task reads.
@@ -45,3 +48,47 @@ def score(truths: Sequence[Choices], guesses: Sequence[Choices]) -> ClassifyScor
         micro=sum(per_class.values(), Tally()),
         per_class=dict(sorted(per_class.items())),
     )
+
+
+def _choices(value: object) -> Choices:
+    if not isinstance(value, Choices):
+        raise TaskError(f"Task {NAME!r} scores choices, not {type(value).__name__}.")
+    return value
+
+
+class Classify(Task):
+    """The classify task, as a plugin: registered under ``classify``."""
+
+    name = NAME
+    version = "1"
+    label_type = LABEL_TYPE
+
+    def score(self, documents: Sequence[Document], params: BaseModel) -> Scored:
+        scores = score(
+            [_choices(d.truth) for d in documents], [_choices(d.prediction) for d in documents]
+        )
+        micro = scores.micro
+        return Scored(
+            metrics={
+                "exact_match": scores.exact_match,
+                "precision": micro.precision,
+                "recall": micro.recall,
+                "f1": micro.f1,
+            },
+            counts={
+                "samples": scores.samples,
+                "exact": scores.exact,
+                "tp": micro.tp,
+                "fp": micro.fp,
+                "fn": micro.fn,
+            },
+            per_class={
+                name: {
+                    "precision": t.precision,
+                    "recall": t.recall,
+                    "f1": t.f1,
+                    "support": t.support,
+                }
+                for name, t in scores.per_class.items()
+            },
+        )

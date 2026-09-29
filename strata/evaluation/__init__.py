@@ -12,6 +12,8 @@ from .counting import Tally
 
 #: Modules a sibling may import by path (docs/adr/0015). Each task is a
 #: module of its own, so ``tasks`` and what is under it are promised whole.
-PUBLIC_MODULES = frozenset({"tasks", "tasks.classify", "tasks.entities", "spans"})
+PUBLIC_MODULES = frozenset(
+    {"identity", "spans", "tasks", "tasks.base", "tasks.classify", "tasks.entities"}
+)
 
 __all__ = ["PUBLIC_MODULES", "Tally", "tasks"]

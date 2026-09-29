@@ -13,10 +13,13 @@ other flatters. See ``docs/adr/0035``.
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 
-from strata.contracts import Span
+from pydantic import BaseModel, ConfigDict
+
+from strata.contracts import Span, Spans
 
 from ..counting import Tally
 from ..spans import Entity, entities, overlaps
+from .base import Document, Scored, Task, TaskError
 
 NAME = "entities"
 #: The label type this task reads.
@@ -70,3 +73,71 @@ def score(truths: Sequence[Iterable[Span]], predicted: Sequence[Iterable[Span]])
         (exact.tp + exact.fn) - partial_tp,
     )
     return EntitiesScore(exact=exact, partial=partial, per_class=dict(sorted(per_class.items())))
+
+
+class EntitiesParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    #: Only these classes, on both sides; None is every class.
+    classes: list[str] | None = None
+
+
+def _spans(value: object) -> list[Span]:
+    if not isinstance(value, Spans):
+        raise TaskError(f"Task {NAME!r} scores spans, not {type(value).__name__}.")
+    return list(value.values)
+
+
+def _only(spans: list[Span], classes: list[str] | None) -> list[Span]:
+    """The spans with their labels cut to ``classes``, and any left with none dropped."""
+    if classes is None:
+        return spans
+    kept = []
+    for span in spans:
+        labels = [label for label in span.labels if label in classes]
+        if labels:
+            kept.append(span.model_copy(update={"labels": labels}))
+    return kept
+
+
+class Entities(Task):
+    """The entities task, as a plugin: registered under ``entities``."""
+
+    name = NAME
+    version = "1"
+    label_type = LABEL_TYPE
+    Params = EntitiesParams
+
+    def score(self, documents: Sequence[Document], params: BaseModel) -> Scored:
+        classes = getattr(params, "classes", None)
+        scores = score(
+            [_only(_spans(d.truth), classes) for d in documents],
+            [_only(_spans(d.prediction), classes) for d in documents],
+        )
+        exact, partial = scores.exact, scores.partial
+        return Scored(
+            metrics={
+                "precision": exact.precision,
+                "recall": exact.recall,
+                "f1": exact.f1,
+                "partial_precision": partial.precision,
+                "partial_recall": partial.recall,
+                "partial_f1": partial.f1,
+            },
+            counts={
+                "documents": len(documents),
+                "tp": exact.tp,
+                "fp": exact.fp,
+                "fn": exact.fn,
+                "partial_tp": partial.tp,
+            },
+            per_class={
+                label: {
+                    "precision": t.precision,
+                    "recall": t.recall,
+                    "f1": t.f1,
+                    "support": t.support,
+                }
+                for label, t in scores.per_class.items()
+            },
+        )
