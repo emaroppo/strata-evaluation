@@ -74,6 +74,7 @@ hash of its bytes, so editing it is a new identity:
 ```python
 from strata.evaluation.failures import FailureMode
 
+
 class SignatureBlock(FailureMode):
     name = "signature_block"
     version = "1"
@@ -81,8 +82,7 @@ class SignatureBlock(FailureMode):
     description = "a prediction covering a whole signature block"
     example = ("Regards,\n[Anne|PER]", "[Regards,\nAnne|PER]")
 
-    def detect(self, a):
-        ...
+    def detect(self, a): ...
 ```
 
 `strata.evaluation.conformance` holds the promise as tests a plugin runs:
