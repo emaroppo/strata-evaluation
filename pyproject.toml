@@ -1,7 +1,7 @@
 [project]
 name = "strata-evaluation"
 version = "0.1.0"
-description = "How a prediction is scored against an answer: the counts, the matching, and the numbers read from them, as pure functions over strata-contracts values"
+description = "How a prediction is scored against an answer: tasks over a label type, failure modes for anonymisation, and the identity of the code behind each score"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
