@@ -32,11 +32,18 @@ def _task_base() -> type:
     return Task
 
 
+def _failure_mode_base() -> type:
+    from .failures import FailureMode
+
+    return FailureMode
+
+
 #: Each kind: the entry point group it is registered under, and the class
 #: what resolves must subclass. The base is looked up late, so a kind's
 #: module is imported only when that kind is asked for.
 KINDS: dict[str, tuple[str, Callable[[], type]]] = {
     "task": ("strata.evaluation_tasks", _task_base),
+    "failure_mode": ("strata.failure_modes", _failure_mode_base),
 }
 
 

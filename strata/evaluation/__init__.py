@@ -14,13 +14,19 @@ from .counting import Tally
 #: module of its own, so ``tasks`` and what is under it are promised whole.
 PUBLIC_MODULES = frozenset(
     {
+        "alignment",
+        "conformance",
+        "failures",
         "identity",
+        "markup",
         "registry",
         "spans",
         "tasks",
         "tasks.base",
         "tasks.classify",
         "tasks.entities",
+        "tasks.mask",
+        "text",
     }
 )
 

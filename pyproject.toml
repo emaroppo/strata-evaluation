@@ -19,6 +19,27 @@ dependencies = [
 [project.entry-points."strata.evaluation_tasks"]
 classify = "strata.evaluation.tasks.classify:Classify"
 entities = "strata.evaluation.tasks.entities:Entities"
+mask = "strata.evaluation.tasks.mask:Mask"
+
+# The ways a span prediction can be wrong for anonymisation, which the mask
+# task runs. A project's own are named by path (docs/adr/0043).
+[project.entry-points."strata.failure_modes"]
+missed = "strata.evaluation.failures:Missed"
+truncated = "strata.evaluation.failures:Truncated"
+fragmented = "strata.evaluation.failures:Fragmented"
+mislabelled = "strata.evaluation.failures:Mislabelled"
+shared = "strata.evaluation.failures:Shared"
+leaked = "strata.evaluation.failures:Leaked"
+spurious = "strata.evaluation.failures:Spurious"
+spilled = "strata.evaluation.failures:Spilled"
+merging = "strata.evaluation.failures:Merging"
+duplicate = "strata.evaluation.failures:Duplicate"
+char_recall = "strata.evaluation.failures:CharRecall"
+char_precision = "strata.evaluation.failures:CharPrecision"
+spurious_chars = "strata.evaluation.failures:SpuriousChars"
+spilled_chars = "strata.evaluation.failures:SpilledChars"
+bridge_chars = "strata.evaluation.failures:BridgeChars"
+placeholder_count_error = "strata.evaluation.failures:PlaceholderCountError"
 
 # What developing this package alone needs beyond its extras. Inside the
 # strata workspace the root's group is used instead.

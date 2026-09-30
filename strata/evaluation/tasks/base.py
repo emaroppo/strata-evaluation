@@ -89,6 +89,14 @@ class Task(ABC):
         except ValueError as e:
             raise TaskError(f"Task {self.name!r} will not take these parameters: {e}") from None
 
+    def requires(self, params: BaseModel) -> list[tuple[str, str]]:
+        """Other plugins these parameters name, as ``(kind, ref)``.
+
+        Resolved to identities alongside the task's own, so a change in one
+        of them is a change in the score's identity. None by default.
+        """
+        return []
+
     def check(self, params: BaseModel, schema: AnySchema) -> None:
         """Refuse, before anything is scored, what this label set makes impossible.
 
