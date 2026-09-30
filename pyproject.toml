@@ -9,7 +9,16 @@ dependencies = [
     # no store and no model, so a package that only reads records can
     # depend on this one without carrying any of them.
     "strata-contracts>=0.1,<0.2",
+    # The entry-point resolver tasks and failure modes are found through,
+    # the one models and preparers use. Nothing else of it.
+    "strata-common>=0.1,<0.2",
 ]
+
+# What a file can name by a short name. A plugin registers here too; a
+# project's own file is named by path instead (docs/adr/0043).
+[project.entry-points."strata.evaluation_tasks"]
+classify = "strata.evaluation.tasks.classify:Classify"
+entities = "strata.evaluation.tasks.entities:Entities"
 
 # What developing this package alone needs beyond its extras. Inside the
 # strata workspace the root's group is used instead.

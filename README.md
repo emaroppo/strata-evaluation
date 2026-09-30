@@ -17,9 +17,10 @@ uv add "strata-evaluation @ $g/strata-evaluation@v0.1.0" \
        "strata-common @ $g/strata-common@v0.1.0"
 ```
 
-Depends on `strata-contracts` alone. May not import an ML framework, a
-store, a model or Label Studio: a score is a function of a prediction and
-an answer, and nothing else.
+Depends on `strata-contracts`, and on `strata-common` for the entry-point
+resolver. May not import an ML framework, a store, a model or Label
+Studio: a score is a function of a prediction and an answer, and nothing
+else.
 
 ## What it holds
 
