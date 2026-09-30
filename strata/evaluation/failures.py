@@ -5,7 +5,7 @@ a one-line description, a worked example, and :meth:`FailureMode.detect`
 over an :class:`~strata.evaluation.alignment.Alignment`. The ``mask`` task
 aggregates whatever modes it is given, the same way for every mode of a
 side, so adding one is one class, and a project can keep its own in a file
-of its own (``failures.py:Class``). See ``docs/adr/0043``.
+of its own (``failures.py:Class``). See ``docs/adr/0042``.
 
 Each mode's example is the case it exists for, and the conformance suite
 holds it to raising that mode and no other *isolated* mode outside its

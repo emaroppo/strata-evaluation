@@ -4,7 +4,7 @@ A score is comparable with another only when the same code produced both.
 With tasks and failure modes resolvable from a project's own file, "the
 same code" cannot be the package version alone, so every score carries the
 identity of what computed it: its name, the version it declares, and where
-it came from. See ``docs/adr/0043``.
+it came from. See ``docs/adr/0042``.
 """
 
 import hashlib

@@ -2,7 +2,7 @@
 
 Computed once per document and only read by failure modes, so every mode
 agrees on what overlapping, covering and spilling mean, and a new mode
-rarely needs new geometry. See ``docs/adr/0043``.
+rarely needs new geometry. See ``docs/adr/0042``.
 
 "Characters" are the non-whitespace characters of the text: the space
 between "John" and "Smith" is never a leak, a spill or a bridge. Two spans

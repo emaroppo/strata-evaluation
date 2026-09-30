@@ -3,7 +3,7 @@
 Subclass :class:`Task`, as a model subclasses ``Model``: name it, version
 it, say which label type it reads, and implement :meth:`Task.score`. A
 task is found by name through the ``strata.evaluation_tasks`` entry point
-group, or from a project's own ``file.py:Class``. See ``docs/adr/0043``.
+group, or from a project's own ``file.py:Class``. See ``docs/adr/0042``.
 """
 
 from abc import ABC, abstractmethod

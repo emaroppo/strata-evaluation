@@ -15,14 +15,14 @@ dependencies = [
 ]
 
 # What a file can name by a short name. A plugin registers here too; a
-# project's own file is named by path instead (docs/adr/0043).
+# project's own file is named by path instead (docs/adr/0042).
 [project.entry-points."strata.evaluation_tasks"]
 classify = "strata.evaluation.tasks.classify:Classify"
 entities = "strata.evaluation.tasks.entities:Entities"
 mask = "strata.evaluation.tasks.mask:Mask"
 
 # The ways a span prediction can be wrong for anonymisation, which the mask
-# task runs. A project's own are named by path (docs/adr/0043).
+# task runs. A project's own are named by path (docs/adr/0042).
 [project.entry-points."strata.failure_modes"]
 missed = "strata.evaluation.failures:Missed"
 truncated = "strata.evaluation.failures:Truncated"

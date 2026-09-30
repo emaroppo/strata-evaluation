@@ -6,7 +6,7 @@ bounds, but whether each was hidden, hidden once, under the right label,
 and nothing else with it. Each way of getting that wrong is a failure mode
 with a metric of its own (:mod:`strata.evaluation.failures`), and which
 modes run is a parameter: first-party names, or a project's own
-``failures.py:Class``. See ``docs/adr/0043``.
+``failures.py:Class``. See ``docs/adr/0042``.
 
 Every mode is aggregated the same way for its side, so this module knows
 no mode by name. ``clean`` is derived from whichever modes ran: a gold

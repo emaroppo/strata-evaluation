@@ -5,7 +5,7 @@ short name resolves through the kind's entry point group; anything with a
 ``:`` is a direct reference, ``file.py:Class`` anchored at a root, or an
 installed ``module:Class``. Whatever resolves comes back with its
 :class:`~strata.evaluation.identity.Identity`, which is what a score records
-and a comparison checks. See ``docs/adr/0043``.
+and a comparison checks. See ``docs/adr/0042``.
 """
 
 import hashlib
