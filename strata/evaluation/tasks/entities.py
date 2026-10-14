@@ -31,6 +31,8 @@ class EntitiesScore:
     exact: Tally
     partial: Tally
     per_class: dict[str, Tally] = field(default_factory=dict)
+    #: The partial notion of a match, per class, over the same denominators.
+    per_class_partial: dict[str, Tally] = field(default_factory=dict)
 
 
 def paired_overlaps(predicted: Sequence[Entity], truth: Sequence[Entity]) -> int:
@@ -55,6 +57,7 @@ def score(truths: Sequence[Iterable[Span]], predicted: Sequence[Iterable[Span]])
     exact = Tally()
     partial_tp = 0
     per_class: dict[str, Tally] = {}
+    partial_tp_of: dict[str, int] = {}
 
     for wanted_spans, got_spans in zip(truths, predicted, strict=True):
         wanted, got = entities(wanted_spans), entities(got_spans)
@@ -66,13 +69,25 @@ def score(truths: Sequence[Iterable[Span]], predicted: Sequence[Iterable[Span]])
                 {k for k in wanted_keys if k[0] == label},
                 {k for k in got_keys if k[0] == label},
             )
+            partial_tp_of[label] = partial_tp_of.get(label, 0) + paired_overlaps(
+                [k for k in got if k[0] == label], [k for k in wanted if k[0] == label]
+            )
 
-    partial = Tally(
-        partial_tp,
-        (exact.tp + exact.fp) - partial_tp,
-        (exact.tp + exact.fn) - partial_tp,
+    partial = _loosened(exact, partial_tp)
+    per_class_partial = {
+        label: _loosened(t, partial_tp_of.get(label, 0)) for label, t in per_class.items()
+    }
+    return EntitiesScore(
+        exact=exact,
+        partial=partial,
+        per_class=dict(sorted(per_class.items())),
+        per_class_partial=dict(sorted(per_class_partial.items())),
     )
-    return EntitiesScore(exact=exact, partial=partial, per_class=dict(sorted(per_class.items())))
+
+
+def _loosened(exact: Tally, partial_tp: int) -> Tally:
+    """The exact tally's predictions and truth, matched by overlap instead."""
+    return Tally(partial_tp, (exact.tp + exact.fp) - partial_tp, (exact.tp + exact.fn) - partial_tp)
 
 
 class EntitiesParams(BaseModel):
@@ -104,7 +119,8 @@ class Entities(Task):
     """The entities task, as a plugin: registered under ``entities``."""
 
     name = NAME
-    version = "1"
+    # 2: per-class scores carry the partial notion of a match too
+    version = "2"
     label_type = LABEL_TYPE
     Params = EntitiesParams
 
@@ -136,6 +152,9 @@ class Entities(Task):
                     "precision": t.precision,
                     "recall": t.recall,
                     "f1": t.f1,
+                    "partial_precision": scores.per_class_partial[label].precision,
+                    "partial_recall": scores.per_class_partial[label].recall,
+                    "partial_f1": scores.per_class_partial[label].f1,
                     "support": t.support,
                 }
                 for label, t in scores.per_class.items()

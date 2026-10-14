@@ -4,7 +4,7 @@ The cases that matter are the ones where a plausible-looking
 implementation is wrong.
 """
 
-from strata.contracts import Span
+from strata.contracts import Span, Spans
 from strata.evaluation import Tally
 from strata.evaluation.tasks import entities
 
@@ -74,3 +74,39 @@ def test_a_half_found_two_label_region_is_one_of_two():
     assert scores.exact.recall == 0.5
     assert scores.exact.precision == 1.0
     assert scores.per_class["ORG"].f1 == 0.0
+
+
+def test_per_class_partial_scores_forgive_a_boundary_in_that_class_only():
+    truth = [[s("PER", 0, 5), s("ORG", 10, 15)]]
+    predicted = [[s("PER", 0, 6), s("ORG", 20, 25)]]
+    scores = entities.score(truth, predicted)
+    assert (scores.per_class["PER"].f1, scores.per_class_partial["PER"].f1) == (0.0, 1.0)
+    assert (scores.per_class["ORG"].f1, scores.per_class_partial["ORG"].f1) == (0.0, 0.0)
+
+
+def test_per_class_partial_tallies_add_up_to_the_overall_partial_one():
+    truth = [[s("PER", 0, 5), s("ORG", 10, 15)], [s("PER", 0, 3)]]
+    predicted = [[s("PER", 1, 5), s("ORG", 10, 15), s("ORG", 30, 33)], []]
+    scores = entities.score(truth, predicted)
+    total = Tally()
+    for tally in scores.per_class_partial.values():
+        total += tally
+    assert total == scores.partial
+
+
+def test_the_task_reports_strict_and_partial_scores_per_class():
+    from strata.evaluation.tasks.base import Document
+    from strata.evaluation.tasks.entities import Entities, EntitiesParams
+
+    documents = [
+        Document(truth=Spans(values=[s("PER", 0, 5)]), prediction=Spans(values=[s("PER", 0, 6)]))
+    ]
+    per_class = Entities().score(documents, EntitiesParams()).per_class["PER"]
+    assert (per_class["f1"], per_class["partial_f1"]) == (0.0, 1.0)
+    assert set(per_class) >= {
+        "precision",
+        "recall",
+        "partial_precision",
+        "partial_recall",
+        "support",
+    }

@@ -27,7 +27,7 @@ def test_the_first_party_tasks_are_registered():
 def test_a_short_name_resolves_through_the_entry_point():
     found, identity = resolve("task", "entities")
     assert found is Entities
-    assert identity.name == "entities" and identity.version == "1"
+    assert identity.name == "entities" and identity.version == "2"
     assert identity.source.startswith("strata-evaluation==")
 
 
