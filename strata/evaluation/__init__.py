@@ -26,6 +26,7 @@ PUBLIC_MODULES = frozenset(
         "tasks.classify",
         "tasks.entities",
         "tasks.mask",
+        "tasks.text_generation",
         "text",
     }
 )

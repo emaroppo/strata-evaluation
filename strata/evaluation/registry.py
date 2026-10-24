@@ -27,9 +27,9 @@ class PluginError(ValueError):
 
 
 def _task_base() -> type:
-    from .tasks.base import Task
+    from .tasks.base import BaseTask
 
-    return Task
+    return BaseTask
 
 
 def _failure_mode_base() -> type:
@@ -40,11 +40,16 @@ def _failure_mode_base() -> type:
 
 #: Each kind: the entry point group it is registered under, and the class
 #: what resolves must subclass. The base is looked up late, so a kind's
-#: module is imported only when that kind is asked for.
+#: module is imported only when that kind is asked for. A task reads a
+#: label type or a generator's outputs (``docs/adr/0054``), so its base is
+#: the parent of both.
 KINDS: dict[str, tuple[str, Callable[[], type]]] = {
     "task": ("strata.evaluation_tasks", _task_base),
     "failure_mode": ("strata.failure_modes", _failure_mode_base),
 }
+
+#: What a refusal calls a base whose class name is not what a plugin subclasses.
+_CALLED = {"BaseTask": "Task"}
 
 
 def entries(kind: str) -> list[EntryPoint]:
@@ -107,7 +112,8 @@ def resolve(kind: str, ref: str, root: Path | None = None) -> tuple[Any, Identit
     if found is None:
         raise PluginError(f"No {class_name!r} in {target}.")
     if not (isinstance(found, type) and issubclass(found, wanted)):
-        raise PluginError(f"{ref!r} is {found!r}, which is not a {wanted.__name__}.")
+        called = _CALLED.get(wanted.__name__, wanted.__name__)
+        raise PluginError(f"{ref!r} is {found!r}, which is not a {called}.")
     return found, of_file(found.name, found.version, path)
 
 

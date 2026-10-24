@@ -18,7 +18,7 @@ class TestFirstPartyModes(FailureModeContract):
 
 
 class TestFirstPartyTasks(TaskContract):
-    @pytest.fixture(params=["classify", "entities", "mask"])
+    @pytest.fixture(params=["classify", "entities", "mask", "text-generation"])
     def task(self, request):
         return resolve("task", request.param)[0]
 

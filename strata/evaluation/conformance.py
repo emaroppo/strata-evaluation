@@ -13,6 +13,11 @@ does with ``ModelContract`` (``docs/adr/0033``)::
 A failure mode is held to the case it exists for: its example raises it,
 and raises no isolated first-party mode outside its ``co_occurs``, so a
 mode that overlaps one already there fails here, naming it.
+
+``TaskContract`` holds either kind of task: one reading a label type, or a
+:class:`~strata.evaluation.tasks.base.GenerationTask` reading a media's
+generated outputs (``docs/adr/0054``). Each is asked what it reads, and
+handed nothing of its own kind to score.
 """
 
 import pytest
@@ -21,7 +26,7 @@ from .alignment import align
 from .failures import DEFAULT, SIDES, FailureMode
 from .markup import pair
 from .registry import resolve
-from .tasks.base import Task, TaskError
+from .tasks.base import BaseTask, Generation, GenerationTask, Task, TaskError
 
 
 def _detect(mode: FailureMode, example: tuple[str, str]):
@@ -73,15 +78,18 @@ class TaskContract:
     """Subclass this in a plugin's tests and supply the ``task`` fixture (the class)."""
 
     @pytest.fixture
-    def task(self) -> type[Task]:
+    def task(self) -> type[BaseTask]:
         raise NotImplementedError("Supply the task class as the `task` fixture.")
 
     def test_it_is_a_task(self, task):
-        assert isinstance(task, type) and issubclass(task, Task)
+        assert isinstance(task, type) and issubclass(task, Task | GenerationTask)
 
     def test_it_says_what_it_is(self, task):
         assert task.name and task.version
-        assert task.label_type in ("classification", "span", "bbox")
+        if issubclass(task, GenerationTask):
+            assert isinstance(task.media, str) and task.media, "a generation task names its media"
+        else:
+            assert task.label_type in ("classification", "span", "bbox")
 
     def test_it_refuses_a_parameter_it_does_not_take(self, task):
         with pytest.raises(TaskError):
@@ -89,5 +97,16 @@ class TaskContract:
 
     def test_nothing_to_score_scores_without_raising(self, task):
         instance = task()
-        scored = instance.score([], instance.params())
+        if isinstance(instance, GenerationTask):
+            scored = instance.score(Generation([], [], []), instance.params())
+        else:
+            scored = instance.score([], instance.params())
         assert isinstance(scored.metrics, dict)
+
+    def test_a_generation_task_refuses_another_media(self, task):
+        if not issubclass(task, GenerationTask):
+            pytest.skip(f"{task.name} reads a label type, which its check refuses instead")
+        instance = task()
+        instance.check(instance.params(), task.media)
+        with pytest.raises(TaskError):
+            instance.check(instance.params(), f"not-{task.media}")

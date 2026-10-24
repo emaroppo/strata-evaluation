@@ -24,6 +24,27 @@ def test_the_first_party_tasks_are_registered():
     assert {"classify", "entities"} <= set(available("task"))
 
 
+GENERATING = """
+from strata.evaluation.tasks import GenerationTask, Scored
+
+
+class Count(GenerationTask):
+    name = "count"
+    version = "1"
+    media = "text"
+
+    def score(self, generation, params):
+        return Scored(metrics={"outputs": float(len(generation.outputs))})
+"""
+
+
+def test_a_generation_task_resolves_from_a_file_as_a_task_does(tmp_path):
+    (tmp_path / "tasks.py").write_text(GENERATING)
+    found, identity = resolve("task", "tasks.py:Count", root=tmp_path)
+    assert found.media == "text"
+    assert identity.source.startswith("file:")
+
+
 def test_a_short_name_resolves_through_the_entry_point():
     found, identity = resolve("task", "entities")
     assert found is Entities

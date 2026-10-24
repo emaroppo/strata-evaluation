@@ -1,7 +1,7 @@
 [project]
 name = "strata-evaluation"
 version = "0.1.0"
-description = "How a prediction is scored against an answer: tasks over a label type, failure modes for anonymisation, and the identity of the code behind each score"
+description = "How a prediction is scored against an answer: tasks over a label type or a generator's outputs, failure modes for anonymisation, and the identity of the code behind each score"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -20,6 +20,7 @@ dependencies = [
 classify = "strata.evaluation.tasks.classify:Classify"
 entities = "strata.evaluation.tasks.entities:Entities"
 mask = "strata.evaluation.tasks.mask:Mask"
+text-generation = "strata.evaluation.tasks.text_generation:TextGeneration"
 
 # The ways a span prediction can be wrong for anonymisation, which the mask
 # task runs. A project's own are named by path (docs/adr/0042).

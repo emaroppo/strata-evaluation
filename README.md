@@ -31,11 +31,19 @@ tasks can read the same label type. Subclass `Task` as a model subclasses
 `score`. What it records carries the **identity** of the code that
 produced it, so two scores are compared only across one.
 
+A generator's outputs have no label type and no one right answer, so a
+task scoring them subclasses `GenerationTask` instead and names the
+**media** it reads (`media = "text"`). It is handed a `Generation`: one
+output per validation sample, each with whether it `ended` on its own,
+the validation targets in the same order, and the training targets
+(`docs/adr/0054`).
+
 | task | reads | asks |
 |---|---|---|
 | `classify` | classification | exact match over each sample's set of classes; micro and per-class precision, recall, F1 |
 | `entities` | span | was each entity found with its label and bounds: exact and partial (one-to-one) precision, recall, F1, micro and per class |
 | `mask` | span | is the anonymised document right: one metric per failure mode, below |
+| `text-generation` | generated text | `ended`; `distinct_1`–`distinct_3` across outputs; the longest run of words shared with any one training target, whitespace and case folded, as `longest_run_median`, `_p90`, `_max` and `_over_20`; `chrf` against each output's target with `chrf = true`, off by default |
 
 Exact match is not called accuracy: a label set asserting two classes per
 sample, scored by a model asserting one, has an exact match of zero. A
