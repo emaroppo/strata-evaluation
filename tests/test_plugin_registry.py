@@ -3,7 +3,7 @@
 import pytest
 
 from strata.evaluation import registry
-from strata.evaluation.registry import PluginError, anchored, available, resolve
+from strata.evaluation.registry import PluginError, available, resolve
 from strata.evaluation.tasks import Classify, Entities
 
 LOCAL = """
@@ -101,12 +101,6 @@ def test_an_entry_point_naming_another_task_is_refused(monkeypatch):
     monkeypatch.setattr(registry, "entries", lambda kind: [wrong])
     with pytest.raises(PluginError, match="names itself 'classify'"):
         resolve("task", "counts")
-
-
-def test_anchoring_makes_a_file_reference_absolute_and_leaves_names_alone(tmp_path):
-    assert anchored("entities", tmp_path) == "entities"
-    assert anchored("pkg.mod:Task", tmp_path) == "pkg.mod:Task"
-    assert anchored("tasks.py:Loud", tmp_path) == f"{(tmp_path / 'tasks.py').resolve()}:Loud"
 
 
 def test_an_unknown_kind_is_refused():

@@ -1,8 +1,6 @@
 """Counts, and the rates read from them.
 
-Knows nothing about label types or tasks: a task decides what counts as a
-hit, and hands the count here. Kept as counts until read, because a rate
-computed early cannot be pooled with another and a tally can.
+Kept as counts until read: a tally pools with another, a rate does not.
 """
 
 from dataclasses import dataclass

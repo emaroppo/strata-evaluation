@@ -1,24 +1,7 @@
 """The ways a span prediction can be wrong for anonymisation, one metric each.
 
-A failure mode is a small class: a name, a version, the side it counts on,
-a one-line description, a worked example, and :meth:`FailureMode.detect`
-over an :class:`~strata.evaluation.alignment.Alignment`. The ``mask`` task
-aggregates whatever modes it is given, the same way for every mode of a
-side, so adding one is one class, and a project can keep its own in a file
-of its own (``failures.py:Class``). See ``docs/adr/0042``.
-
-Each mode's example is the case it exists for, and the conformance suite
-holds it to raising that mode and no other *isolated* mode outside its
-``co_occurs``: a mode that overlaps another fails, naming both.
-Aggregates, which summarise several failures in one number, are not
-isolated and are not held to it.
-
-Sides, and what :meth:`detect` returns for each:
-
-- ``gold``: the gold entities it flags, as indices. Rated over gold entities.
-- ``prediction``: the predictions it flags, as indices. Over predictions.
-- ``characters``: a numerator and a denominator of characters.
-- ``document``: one number for the document, averaged over documents.
+A mode is a class the ``mask`` task aggregates by side; a project may keep
+its own in a file (``failures.py:Class``). See ``docs/adr/0042``.
 """
 
 from abc import ABC, abstractmethod
@@ -33,20 +16,22 @@ Detected = set[int] | tuple[int, int] | float
 
 
 class FailureMode(ABC):
-    """Subclass this, name it, give it an example, and implement :meth:`detect`."""
+    """Subclass this, name it, give it an example, and implement :meth:`detect`.
+
+    ``detect`` returns flagged indices for the ``gold`` and ``prediction``
+    sides, a numerator and denominator for ``characters``, a float for ``document``.
+    """
 
     name: ClassVar[str]
     #: Bumped when a change alters what an unchanged document detects.
     version: ClassVar[str]
     side: ClassVar[Side]
     description: ClassVar[str]
-    #: The case this mode exists for, as ``(gold, predicted)`` markup over one
-    #: text: ``("Dear [John Smith|PER]", "Dear [John|PER] [Smith|PER]")``.
+    #: The case this mode exists for, as ``(gold, predicted)`` markup over one text.
     example: ClassVar[tuple[str, str]]
     #: Isolated modes the example may raise as well, because the case is both.
     co_occurs: ClassVar[tuple[str, ...]] = ()
-    #: False for an aggregate: a number summarising several failures, which
-    #: another mode's example is expected to move.
+    #: False for an aggregate, which another mode's example is expected to move.
     isolated: ClassVar[bool] = True
 
     @abstractmethod
@@ -285,8 +270,8 @@ class PlaceholderCountError(FailureMode):
         return float(error)
 
 
-#: The first-party modes, as a file names them. Registered under
-#: ``strata.failure_modes``; this is what ``mask`` runs when not told.
+#: The first-party modes, registered under ``strata.failure_modes``; what ``mask`` runs when not
+#: told.
 DEFAULT: tuple[str, ...] = (
     "missed",
     "truncated",

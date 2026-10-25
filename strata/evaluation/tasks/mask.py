@@ -1,17 +1,7 @@
 """The mask task: is the anonymised document right?
 
-One task over the span label type, beside ``entities`` and asking something
-else of the same spans: not whether each entity was found with the right
-bounds, but whether each was hidden, hidden once, under the right label,
-and nothing else with it. Each way of getting that wrong is a failure mode
-with a metric of its own (:mod:`strata.evaluation.failures`), and which
-modes run is a parameter: first-party names, or a project's own
-``failures.py:Class``. See ``docs/adr/0042``.
-
-Every mode is aggregated the same way for its side, so this module knows
-no mode by name. ``clean`` is derived from whichever modes ran: a gold
-entity no gold-side mode flagged, touched only by predictions no
-prediction-side mode flagged.
+Each way of getting it wrong is a failure mode with a metric of its own, and
+which modes run is a parameter. ``clean`` is a gold entity no mode flagged. See ``docs/adr/0042``.
 """
 
 from collections import defaultdict
@@ -38,8 +28,7 @@ class MaskParams(BaseModel):
 
     #: Only these classes, on both sides; None is every class.
     classes: list[str] | None = None
-    #: Which failure modes to run, by name or ``file.py:Class``; None is the
-    #: first-party set. File references are anchored before they get here.
+    #: Which failure modes to run, by name or ``file.py:Class``; None is the first-party set.
     failures: list[str] | None = None
 
 

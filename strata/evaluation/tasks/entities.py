@@ -1,13 +1,7 @@
 """The entities task: did the model find the entities, with the right label and bounds.
 
-One task over the span label type, not the way spans are scored: another
-task over the same spans can ask a different question of them.
-
-*Exact* requires the label and both offsets to agree; *partial* accepts an
-overlap of the same label, paired one-to-one. Partial shares the exact
-counts' denominators: the same predictions and the same truth, scored by a
-looser notion of a match. Both are kept because one understates and the
-other flatters. See ``docs/adr/0035``.
+*Exact* needs label and both offsets to agree; *partial* accepts a same-label
+overlap, paired one-to-one, over the same denominators. See ``docs/adr/0035``.
 """
 
 from collections.abc import Iterable, Sequence
@@ -36,10 +30,8 @@ class EntitiesScore:
 
 
 def paired_overlaps(predicted: Sequence[Entity], truth: Sequence[Entity]) -> int:
-    """Predicted entities overlapping a true one of the same label, paired off.
-
-    One-to-one on purpose: otherwise one sentence-wide span scores against
-    every entity inside it. See ``docs/adr/0035``.
+    """Predicted entities overlapping a true one of the same label, paired one-to-one. See
+    ``docs/adr/0035``.
     """
     unmatched = list(truth)
     matched = 0

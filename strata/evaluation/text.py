@@ -1,10 +1,6 @@
-"""A document's text, read the way the offsets into it were made.
+"""A document's text, read as the tagger read it: UTF-8, undecodable bytes replaced.
 
-Span offsets index the text a tagger read, so scoring against them reads it
-the same way: UTF-8, with undecodable bytes replaced, through
-``Path.read_text``. A document that cannot be read is refused, not scored
-as empty: an empty text would turn every entity in it into a miss and say
-nothing about why (``docs/adr/0036``).
+An unreadable document is refused, not scored as empty. See ``docs/adr/0036``.
 """
 
 from pathlib import Path

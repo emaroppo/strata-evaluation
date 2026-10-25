@@ -1,23 +1,7 @@
 """What a task or a failure mode promises, as tests its author runs.
 
-Subclass the contract in a plugin's tests and supply the fixture, as a model
-does with ``ModelContract`` (``docs/adr/0033``)::
-
-    from strata.evaluation.conformance import FailureModeContract
-
-    class TestSignatureBlock(FailureModeContract):
-        @pytest.fixture
-        def mode(self):
-            return SignatureBlock
-
-A failure mode is held to the case it exists for: its example raises it,
-and raises no isolated first-party mode outside its ``co_occurs``, so a
-mode that overlaps one already there fails here, naming it.
-
-``TaskContract`` holds either kind of task: one reading a label type, or a
-:class:`~strata.evaluation.tasks.base.GenerationTask` reading a media's
-generated outputs (``docs/adr/0054``). Each is asked what it reads, and
-handed nothing of its own kind to score.
+Subclass a contract in a plugin's tests and supply its fixture, as a model
+does with ``ModelContract``. See ``docs/adr/0033`` and ``docs/adr/0054``.
 """
 
 import pytest
@@ -53,7 +37,7 @@ class FailureModeContract:
         assert mode.raised(detected), f"{mode.name}'s own example does not raise it"
 
     def test_its_example_raises_no_other_mode(self, mode):
-        """The separation promise: one failure, one metric."""
+        """One failure, one metric: no isolated mode outside ``co_occurs`` is raised."""
         if not mode.isolated:
             pytest.skip(f"{mode.name} is an aggregate, which other failures move")
         others = []

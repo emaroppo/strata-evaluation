@@ -1,22 +1,8 @@
 """The text-generation task: what a text generator's outputs are, not whether they match.
 
-A generated body has no one right answer, so it is scored on properties of
-the outputs together. Three questions, as every generation task asks them
-(``docs/adr/0054``):
-
-- **memorisation:** the longest run of words each output shares with any
-  training target, whitespace and case folded, as a median, a 90th
-  percentile, a maximum and the share over twenty words;
-- **diversity:** distinct 1-, 2- and 3-grams over all n-grams, across every
-  output, in whitespace-separated words;
-- **agreement with the target:** chrF against each output's validation
-  target, only when asked for. For open-ended writing a good output can
-  share nothing with the real one, so it is off by default.
-
-Beside them ``ended``, the share that stopped on their own rather than at
-the token limit. What only one project can check, such as whether an
-output honoured its conditions, is that project's own plugin
-(``docs/adr/0042``).
+Memorisation (longest run shared with a training target), diversity
+(distinct n-grams), chrF against the target when asked, and the share that
+``ended`` on their own. See ``docs/adr/0054`` and ``docs/adr/0042``.
 """
 
 from collections import Counter
@@ -29,11 +15,9 @@ from .base import Generation, GenerationTask, Scored
 NAME = "text-generation"
 #: The media this task reads.
 MEDIA = "text"
-#: Outputs sharing a run longer than this with a training target are counted
-#: apart: long enough that a common phrase does not reach it.
+#: Outputs sharing a run longer than this with a training target are counted apart.
 LONG_RUN = 20
-#: chrF as it is usually reported: character n-grams up to six, whitespace
-#: left out, recall weighted twice precision.
+#: chrF as usually reported: character n-grams up to six, recall weighted twice precision.
 CHRF_ORDER = 6
 CHRF_BETA = 2
 
@@ -41,8 +25,7 @@ CHRF_BETA = 2
 class TextGenerationParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    #: Score each output against its validation target with chrF. For a
-    #: summary or a translation; off for open-ended writing.
+    #: Score each output against its validation target with chrF; off for open-ended writing.
     chrf: bool = False
 
 
@@ -62,12 +45,9 @@ def distinct(texts: Sequence[str], n: int) -> float:
 
 
 class SuffixAutomaton:
-    """Every run of consecutive words in a set of texts, for longest-match queries.
+    """Every run of consecutive words in a set of texts, for longest-match queries in linear time.
 
-    Built in time linear in the words, and queried in time linear in the
-    query, so every output is matched against every training target without
-    comparing them pairwise. Each text ends in a separator of its own, which
-    no query can contain, so a match never runs from one text into the next.
+    Each text ends in a separator no query can contain, so a match never runs into the next text.
     """
 
     def __init__(self, texts: Sequence[Sequence[str]]) -> None:
@@ -76,7 +56,7 @@ class SuffixAutomaton:
         self.length = [0]
         last = 0
         for n, text in enumerate(texts):
-            # An int, where every query word is a str.
+            # The separator is an int, where every query word is a str.
             for token in [*text, n]:
                 last = self._extend(last, token)
 
@@ -140,12 +120,8 @@ def _char_ngrams(text: str, n: int) -> Counter[str]:
 
 
 def chrf(outputs: Sequence[str], targets: Sequence[str]) -> float:
-    """chrF of each output against its target, over the whole set, from 0 to 1.
-
-    The character n-gram counts are summed over every pair before precision
-    and recall are taken, which are averaged over the orders both sides
-    reach and combined as an F-score weighting recall ``CHRF_BETA`` times.
-    sacrebleu's corpus chrF with its defaults, divided by a hundred.
+    """Corpus chrF of the outputs against their targets, from 0 to 1: sacrebleu's defaults, over a
+    hundred.
     """
     totals = [[0, 0, 0] for _ in range(CHRF_ORDER)]
     for output, target in zip(outputs, targets, strict=True):
@@ -199,11 +175,10 @@ class TextGeneration(GenerationTask):
         if getattr(params, "chrf", False):
             metrics["chrf"] = chrf(texts, generation.targets)
 
-        # Positional with the outputs, so a reader can find the ones that copy.
         detail: dict = {"longest_run": runs}
         unknown = len(texts) - len(said)
         if unknown:
-            # Left out of ``ended`` rather than counted either way. docs/adr/0036
+            # Left out of ``ended``, not counted either way. docs/adr/0036
             detail["ended_unknown"] = unknown
         return Scored(
             metrics=metrics,

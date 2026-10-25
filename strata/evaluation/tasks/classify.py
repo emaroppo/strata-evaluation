@@ -1,9 +1,7 @@
 """The classify task: which classes a sample is, scored as sets.
 
-``exact`` counts samples whose asserted set is exactly the model's. It is not
-called accuracy: a label set asserting two classes per sample, scored by a
-model asserting one, has an exact match of zero. ``micro`` is over every
-class assertion. See ``docs/adr/0035``.
+``exact`` counts samples whose set is exactly the model's; ``micro`` is over
+every class assertion. See ``docs/adr/0035``.
 """
 
 from collections.abc import Sequence

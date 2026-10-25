@@ -1,9 +1,6 @@
-"""Spans written inline, for examples a person can read: ``Dear [John Smith|PER],``.
+"""Spans written inline for examples and tests: ``Dear [John Smith|PER],``.
 
-``[text|LABEL]`` marks a span; spans nest, so two overlapping predictions
-are ``[John [Smith|PER]|PER]``. What the markup strips to is the document's
-text, and the offsets are into it. For failure modes' worked examples and
-for tests; nothing reads annotations this way.
+``[text|LABEL]`` marks a span and spans nest; offsets are into the stripped text.
 """
 
 from strata.contracts import Span

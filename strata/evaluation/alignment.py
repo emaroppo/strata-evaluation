@@ -1,13 +1,7 @@
 """One document's answer and guess, laid over each other character by character.
 
-Computed once per document and only read by failure modes, so every mode
-agrees on what overlapping, covering and spilling mean, and a new mode
-rarely needs new geometry. See ``docs/adr/0042``.
-
-"Characters" are the non-whitespace characters of the text: the space
-between "John" and "Smith" is never a leak, a spill or a bridge. Two spans
-overlap when they share one. A region is one item whatever labels it
-carries, and labels agree when they share one.
+Computed once per document and read by every failure mode, so all agree on
+what overlapping, covering and spilling mean. See ``docs/adr/0042``.
 """
 
 from collections.abc import Iterable, Sequence
@@ -16,9 +10,8 @@ from typing import Literal
 
 from strata.contracts import Span
 
-#: What a character a prediction covers outside every gold entity is, by
-#: where it sits. Ranked: a character two predictions disagree about takes
-#: the one attached to more entities.
+#: Where a covered character outside every gold entity sits; ranked, so two predictions disagreeing
+#: take the higher.
 Attribution = Literal["bridge", "spill", "spurious"]
 _RANK: dict[str, int] = {"bridge": 2, "spill": 1, "spurious": 0}
 
@@ -77,10 +70,9 @@ class Alignment:
 
 
 def items(text: str, spans: Sequence[Span], classes: Iterable[str] | None = None) -> list[Item]:
-    """``spans`` as items, cut to ``classes`` when given.
+    """``spans`` as items of non-whitespace characters, cut to ``classes`` when given.
 
-    A span over whitespace alone keeps its whole range as its characters,
-    so it still takes part rather than vanishing from every count.
+    A span over whitespace alone keeps its whole range, so it still takes part.
     """
     wanted = set(classes) if classes is not None else None
     out = []

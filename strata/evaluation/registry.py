@@ -1,51 +1,32 @@
-"""Finding a task or a failure mode by the name a file gives it, and saying what was found.
+"""Finding a task or a failure mode by name, with the identity of what was found.
 
-Two paths, and the name says which, as for models (``docs/adr/0034``). A
-short name resolves through the kind's entry point group; anything with a
-``:`` is a direct reference, ``file.py:Class`` anchored at a root, or an
-installed ``module:Class``. Whatever resolves comes back with its
-:class:`~strata.evaluation.identity.Identity`, which is what a score records
-and a comparison checks. See ``docs/adr/0042``.
+A short name resolves through an entry point group; ``file.py:Class`` or
+``module:Class`` is a direct reference. See ``docs/adr/0034`` and ``docs/adr/0042``.
 """
 
 import hashlib
 import importlib
 import importlib.util
 import sys
-from collections.abc import Callable
 from importlib.metadata import EntryPoint, entry_points
 from pathlib import Path
 from typing import Any
 
 from strata.common import plugins
 
+from .failures import FailureMode
 from .identity import Identity, of_entry_point, of_file
+from .tasks.base import BaseTask
 
 
 class PluginError(ValueError):
     """A name that does not resolve to the kind of thing asked for."""
 
 
-def _task_base() -> type:
-    from .tasks.base import BaseTask
-
-    return BaseTask
-
-
-def _failure_mode_base() -> type:
-    from .failures import FailureMode
-
-    return FailureMode
-
-
-#: Each kind: the entry point group it is registered under, and the class
-#: what resolves must subclass. The base is looked up late, so a kind's
-#: module is imported only when that kind is asked for. A task reads a
-#: label type or a generator's outputs (``docs/adr/0054``), so its base is
-#: the parent of both.
-KINDS: dict[str, tuple[str, Callable[[], type]]] = {
-    "task": ("strata.evaluation_tasks", _task_base),
-    "failure_mode": ("strata.failure_modes", _failure_mode_base),
+#: Each kind: its entry point group, and the base class a plugin of it subclasses.
+KINDS: dict[str, tuple[str, type]] = {
+    "task": ("strata.evaluation_tasks", BaseTask),
+    "failure_mode": ("strata.failure_modes", FailureMode),
 }
 
 #: What a refusal calls a base whose class name is not what a plugin subclasses.
@@ -63,28 +44,9 @@ def available(kind: str) -> dict[str, str]:
     return plugins.available(entries(kind))
 
 
-def anchored(ref: str, root: Path | None) -> str:
-    """``ref`` with a ``file.py`` target made absolute against ``root``.
-
-    So it resolves from anywhere once written into a request; the
-    experiment makes it relative to the project again before keying. The
-    same rule as ``strata.modelling``'s ``absolute``.
-    """
-    if ":" not in ref:
-        return ref
-    target, name = ref.rsplit(":", 1)
-    if not target.endswith(".py"):
-        return ref
-    path = Path(target)
-    if not path.is_absolute() and root is not None:
-        path = Path(root) / path
-    return f"{path.resolve()}:{name}"
-
-
 def resolve(kind: str, ref: str, root: Path | None = None) -> tuple[Any, Identity]:
     """The class ``ref`` names, as ``kind``, with its identity."""
-    _, base = _kind(kind)
-    wanted = base()
+    _, wanted = _kind(kind)
     if ":" not in ref:
         entry = plugins.find(
             entries(kind),
@@ -117,7 +79,7 @@ def resolve(kind: str, ref: str, root: Path | None = None) -> tuple[Any, Identit
     return found, of_file(found.name, found.version, path)
 
 
-def _kind(kind: str) -> tuple[str, Callable[[], type]]:
+def _kind(kind: str) -> tuple[str, type]:
     try:
         return KINDS[kind]
     except KeyError:
@@ -134,13 +96,7 @@ def _anchor(target: str, root: Path | None) -> Path:
 
 
 def _module_from_file(path: Path):
-    """Loaded once per path and content, and registered before it runs.
-
-    Keyed on the whole path, as a model's file is, so two projects' files of
-    one name are two modules (``docs/adr/0025``). And on the bytes, so a file
-    edited while a process runs is loaded again rather than scored by the
-    old code under the new file's identity.
-    """
+    """Loaded once per path and content: an edited file is loaded again under its new identity."""
     digest = hashlib.sha256(str(path).encode() + path.read_bytes()).hexdigest()[:12]
     module_name = f"strata_evaluation_local_{path.stem}_{digest}"
     if module_name in sys.modules:
